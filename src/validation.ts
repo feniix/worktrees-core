@@ -1,8 +1,8 @@
 import { resolve } from "node:path";
 import { assertValidationResult, validationIssue, validationResult } from "./errors.js";
 import { branchExists, type GitOptions, isValidBranchName as gitIsValidBranchName, refExists } from "./git.js";
+import { composeBranchName, resolveBranchName, resolveWorkspaceDirectoryName } from "./naming.js";
 import type {
-  BranchNamingOptions,
   BranchNamingPolicy,
   BranchNamingPolicyValidationResult,
   BranchReferenceValidationResult,
@@ -15,7 +15,6 @@ import type {
   RemoveWorktreeValidationResult,
   WorktreePathValidationResult,
 } from "./types.js";
-import { composeBranchName, resolveWorkspaceDirectoryName } from "./workflows.js";
 import {
   defaultWorktreeRoot,
   findCurrentWorktree,
@@ -171,10 +170,6 @@ export function validateRemoveWorktree(removeOptions: RemoveWorktreeOptions): Re
 
 export function assertRemoveWorktreeAllowed(removeOptions: RemoveWorktreeOptions): void {
   assertValidationResult(validateRemoveWorktree(removeOptions));
-}
-
-export function resolveBranchName(name: string, options: BranchNamingOptions = {}): string {
-  return composeBranchName(name, options);
 }
 
 export function validateBranchNamingPolicy(

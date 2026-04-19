@@ -56,6 +56,7 @@ const workspace = prepareWorkspace({
 });
 
 console.log(workspace.directoryName); // "login-flow"
+// workspace.pathName is still available as a deprecated compatibility alias
 
 console.log(worktrees);
 console.log(workspace);
@@ -142,6 +143,7 @@ console.log({ branch, branchFromStrategy, policy });
 - `CreateWorktreeOptions`
 - `RemoveWorktreeOptions`
 - `PrepareWorkspaceOptions`
+- `PlannedWorkspace`
 - `PreparedWorkspace`
 - `PlannedWorktree`
 - `BranchNamingOptions`
@@ -190,15 +192,21 @@ console.log({ branch, branchFromStrategy, policy });
 - `removeWorktree(options)`
 - `pruneWorktrees(startDir, options)`
 
-### Higher-level workflows
+### Naming helpers
 
 - `slugifyBranchName(branch)`
 - `composeBranchName(name, options)`
 - `createBranchNameStrategy(prefix?, separator?, sanitize?)`
 - `branchNameStrategy(prefix?, separator?, sanitize?)` (alias)
+- `resolveBranchName(name, options)`
 - `resolveWorkspaceDirectoryName(options)`
+
+### Higher-level workflows
+
 - `planPrepareWorkspace(options)`
 - `prepareWorkspace(options)`
+
+`PrepareWorkspaceOptions.pathName` and `PreparedWorkspace.pathName` remain available as deprecated compatibility aliases for `directoryName`.
 
 ## Safety behavior
 

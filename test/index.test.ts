@@ -36,6 +36,7 @@ import {
   prepareWorkspace,
   pruneWorktrees,
   removeWorktree,
+  resolveBranchName,
   resolveWorkspaceDirectoryName,
   resolveWorktreePath,
   slugifyBranchName,
@@ -109,6 +110,7 @@ describe("@feniix/worktrees-core", () => {
 
   it("supports branch naming strategies and workspace planning helpers", () => {
     expect(composeBranchName("login-flow", { prefix: "feature" })).toBe("feature/login-flow");
+    expect(resolveBranchName("login-flow", { prefix: "feature" })).toBe("feature/login-flow");
     expect(composeBranchName("Login Flow", { prefix: "feature", sanitize: true })).toBe("feature/Login-Flow");
     expect(composeBranchName("login-flow", { prefix: "feature", separator: "-" })).toBe("feature-login-flow");
 

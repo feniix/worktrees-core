@@ -52,13 +52,15 @@ export interface PlannedWorktree {
   force: boolean;
 }
 
-export interface PreparedWorkspace {
+export interface PlannedWorkspace {
   branch: string;
   directoryName: string;
   /** @deprecated Use directoryName instead. */
   pathName: string;
   path: string;
 }
+
+export interface PreparedWorkspace extends PlannedWorkspace {}
 
 export interface WorktreePathValidationResult extends ValidationResult {
   pathName: string;
