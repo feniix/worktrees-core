@@ -105,6 +105,7 @@ if (!validation.valid) {
 - **Workspace workflows** compose naming, validation, and worktree creation into higher-level flows.
 - **Validation helpers** let callers inspect issues before attempting mutations.
 - **Planning helpers** make it easy to preview derived branch names and paths.
+- The release gate includes installed-package integration E2E checks against a packed tarball, not just repo-internal tests.
 
 ## Documentation
 

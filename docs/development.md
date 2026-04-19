@@ -17,7 +17,7 @@ npm run build
 - `npm run lint` — run Biome checks
 - `npm run test` — run the Vitest test suite
 - `npm run test:coverage` — run tests with coverage
-- `npm run test:e2e` — install the packed tarball into a temp consumer project and run behavioral end-to-end workflow checks
+- `npm run test:e2e` — install the packed tarball into a temp consumer project and run installed-package integration E2E workflow checks
 - `npm run build` — emit compiled package artifacts to `dist/`
 - `npm run smoke:pack` — pack the library and verify runtime + TypeScript consumption from a temp consumer project
 - `npm run lint:pkg` — run `publint` against package metadata and exports
@@ -47,7 +47,7 @@ npm run lint:pkg
 - The package is intentionally ESM-only.
 - `attw` warnings about CommonJS dynamic import usage are advisory in the context of this package's support policy.
 - Packaging or export changes should be validated with `npm pack --dry-run` and `publint` before release.
-- `npm run test:e2e` exercises the published package through real git repository and worktree flows from a temp consumer project.
+- `npm run test:e2e` exercises the installed published package through real git repository and worktree flows from a temp consumer project, including both high-level workflows and low-level git-like primitives.
 
 ## CI note
 

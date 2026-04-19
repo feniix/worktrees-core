@@ -17,6 +17,7 @@ The following are intentionally not part of the stable contract:
 ## Recommended API
 
 These are the primary entry points most consumers should use.
+The published-package integration E2E checks exercise both the recommended workflow path and selected lower-level primitives through the installed package.
 - Prefer `planPrepareWorkspace()` / `prepareWorkspace()` for higher-level workspace flows.
 - Use `createWorktree()` / `removeWorktree()` when you want lower-level git-like control.
 - `directoryName` is the strict high-level workspace path input.
