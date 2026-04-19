@@ -1,17 +1,14 @@
 # @feniix/worktrees-core
 
-Shared TypeScript library for Git worktree management primitives and higher-level workspace workflows.
+TypeScript-first library for git worktree primitives, validation, and higher-level workspace workflows.
 
 ## Features
 
-- Execute `git` commands through a small typed helper
-- Detect repository roots and git directories
-- List and parse `git worktree list --porcelain` output
-- Create, remove, and prune worktrees
-- Validate branch/path availability before mutations
-- Expose typed domain errors for unsafe operations
-- Build reusable branch naming strategies and policy validators
-- Build higher-level workspace flows on top of reusable primitives
+- Git worktree primitives for listing, creating, removing, and pruning worktrees
+- Higher-level workspace workflows built on top of reusable primitives
+- Planning and validation helpers so callers can inspect operations before mutating state
+- Typed domain errors for unsafe operations
+- Reusable branch naming helpers and policies
 
 ## Install
 
@@ -26,10 +23,6 @@ npm install @feniix/worktrees-core
 
 The published package ships compiled ESM in `dist/` plus `.d.ts` declaration files for TypeScript consumers.
 
-## Design goals
-
-This library is still pre-adoption, so the API is intentionally optimized for long-term clarity over backward-compatibility aliases.
-
 ## Module format
 
 This package is **ESM-only**.
@@ -37,16 +30,10 @@ This package is **ESM-only**.
 - ESM consumers can import it normally.
 - CommonJS consumers must use dynamic `import()` instead of `require()`.
 
-## Usage
-
-### Quick start
+## Quick start
 
 ```ts
-import {
-  defaultWorktreeRoot,
-  listWorktrees,
-  prepareWorkspace,
-} from "@feniix/worktrees-core";
+import { defaultWorktreeRoot, listWorktrees, prepareWorkspace } from "@feniix/worktrees-core";
 
 const cwd = process.cwd();
 const worktrees = listWorktrees(cwd);
@@ -60,19 +47,14 @@ const workspace = prepareWorkspace({
 });
 
 console.log(workspace.directoryName); // "login-flow"
-
 console.log(worktrees);
 console.log(workspace);
 ```
 
-### Plan, validate, then execute
+## Plan, validate, then execute
 
 ```ts
-import {
-  createWorktree,
-  planPrepareWorkspace,
-  validatePrepareWorkspace,
-} from "@feniix/worktrees-core";
+import { createWorktree, planPrepareWorkspace, validatePrepareWorkspace } from "@feniix/worktrees-core";
 
 const cwd = process.cwd();
 const planned = planPrepareWorkspace({
@@ -103,156 +85,17 @@ if (!validation.valid) {
 }
 ```
 
-### Compose branch naming strategies
+## Core concepts
 
-```ts
-import {
-  composeBranchName,
-  createBranchNameStrategy,
-  validateBranchNamingPolicy,
-} from "@feniix/worktrees-core";
+- **Worktree primitives** expose low-level git/worktree operations.
+- **Workspace workflows** compose naming, validation, and worktree creation into higher-level flows.
+- **Validation helpers** let callers inspect issues before attempting mutations.
+- **Planning helpers** make it easy to preview derived branch names and paths.
 
-const branch = composeBranchName("Login Flow", {
-  prefix: "feature",
-  sanitize: true,
-});
+## Documentation
 
-const strategy = createBranchNameStrategy("feature", "/", true);
-const branchFromStrategy = strategy("Billing Portal");
-
-const policy = validateBranchNamingPolicy("login-flow", {
-  prefix: "feature",
-  sanitize: true,
-});
-
-console.log({ branch, branchFromStrategy, policy });
-```
-
-## API overview
-
-The root export is intentionally curated to expose the stable, task-oriented API surface for the library.
-
-### Recommended API
-
-These are the primary entry points most consumers should use.
-
-#### Worktree planning and workflows
-
-- `planPrepareWorkspace(options)`
-- `prepareWorkspace(options)`
-- `planCreateWorktree(options)`
-- `createWorktree(options)`
-- `removeWorktree(options)`
-- `pruneWorktrees(startDir, options)`
-
-#### Validation helpers
-
-- `validateBranchName(branch, options)`
-- `assertValidBranchName(branch, options)`
-- `validateBranchReference(ref, options)`
-- `assertBranchReferenceExists(ref, options)`
-- `validateWorktreePathName(pathName)`
-- `assertWorktreePathName(pathName)`
-- `isValidWorktreePathName(pathName)`
-- `validateCreateWorktree(options)`
-- `assertCreateWorktreeAllowed(options)`
-- `validateRemoveWorktree(options)`
-- `assertRemoveWorktreeAllowed(options)`
-- `validateBranchNamingPolicy(name, policy)`
-- `assertBranchNamingPolicy(name, policy)`
-- `validatePrepareWorkspace(options)`
-- `assertPrepareWorkspaceAllowed(options)`
-
-#### Naming helpers
-
-- `composeBranchName(name, options)`
-- `createBranchNameStrategy(prefix?, separator?, sanitize?)`
-- `resolveWorkspaceDirectoryName(options)`
-
-`directoryName` is treated as a safe relative workspace path under `worktreeRoot`:
-- nested paths are allowed, such as `team/backend/login-flow`
-- `/` and `\\` are accepted as input separators
-- rooted or absolute paths are rejected, including UNC paths
-- `.` and `..` segments are rejected
-- successful path-like outputs are canonicalized to `/`
-
-#### Worktree discovery helpers
-
-- `listWorktrees(startDir, options)`
-- `getMainWorktree(startDir, options)`
-- `findCurrentWorktree(startDir, options)`
-- `findWorktreeByPath(path, startDir, options)`
-- `findWorktreeByBranch(branch, startDir, options)`
-- `isMainWorktree(path, startDir, options)`
-- `isCurrentWorktree(path, startDir, options)`
-- `defaultWorktreeRoot(startDir, options)`
-- `resolveWorktreePath(pathName, worktreeRoot)`
-- `worktreePathExists(path)`
-
-### Advanced root exports
-
-These are intentionally kept available at the root, but are lower-level than the recommended workflow APIs.
-
-- `findRepoRoot(startDir, options)`
-- `isGitRepository(startDir, options)`
-- `branchExists(branch, options)`
-- `refExists(ref, options)`
-- `isValidBranchName(branch, options)`
-- `WorktreesCoreError`
-
-### Shared types
-
-- `WorktreeEntry`
-- `CreateWorktreeOptions`
-- `RemoveWorktreeOptions`
-- `PrepareWorkspaceOptions`
-- `PlannedWorkspace`
-- `PreparedWorkspace`
-- `PlannedWorktree`
-- `BranchNamingOptions`
-- `BranchNamingPolicy`
-
-### Error model
-
-- `WorktreesCoreError`
-- `ValidationIssue`
-- `ValidationResult`
-
-## Safety behavior
-
-By default the library rejects a few unsafe operations before shelling out to `git`.
-You can also inspect the typed validation helpers first and decide how to surface issues in your own UI or CLI:
-
-- invalid branch names
-- invalid worktree path names like `..`, `../escape`, `a/./b`, absolute paths, or UNC paths
-- creating a worktree when the target path already exists
-- creating a branch-backed worktree when the branch already exists
-- creating from a missing start point
-- attaching to a missing existing branch when `createBranch: false`
-- removing the main worktree
-- removing the current worktree without `force`
-
-## Release checklist
-
-Before publishing:
-
-```bash
-npm install
-npm run check
-npm run test
-npm run build
-npm pack --dry-run
-```
-
-`npm publish` will also run `prepublishOnly`.
-
-## Development
-
-```bash
-npm install
-npm run typecheck
-npm run test
-```
+- [API guide](./docs/api.md)
+- [Development and release guide](./docs/development.md)
 
 ## License
 
