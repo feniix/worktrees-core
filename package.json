@@ -1,6 +1,6 @@
 {
   "name": "@feniix/worktrees-core",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "TypeScript-first ESM library for git worktree primitives, validation, and higher-level workspace workflows",
   "type": "module",
   "exports": {
