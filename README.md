@@ -26,6 +26,13 @@ npm install @feniix/worktrees-core
 
 The published package ships compiled ESM in `dist/` plus `.d.ts` declaration files for TypeScript consumers.
 
+## Module format
+
+This package is **ESM-only**.
+
+- ESM consumers can import it normally.
+- CommonJS consumers must use dynamic `import()` instead of `require()`.
+
 ## Usage
 
 ### Quick start
