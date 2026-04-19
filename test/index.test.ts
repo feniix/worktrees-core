@@ -337,6 +337,18 @@ describe("@feniix/worktrees-core", () => {
       "START_POINT_NOT_FOUND",
     ]);
 
+    execSync("git tag v1", { cwd: repoDir, stdio: "pipe" });
+
+    const existingRefValidation = validateCreateWorktree({
+      cwd: repoDir,
+      path: join(defaultWorktreeRoot(repoDir), "from-tag"),
+      branch: "v1",
+      createBranch: false,
+    });
+    expect(existingRefValidation.valid).toBe(true);
+    expect(existingRefValidation.branchNameValid).toBe(true);
+    expect(existingRefValidation.branchResolvable).toBe(true);
+
     const existingBranchValidation = validateCreateWorktree({
       cwd: repoDir,
       path: join(defaultWorktreeRoot(repoDir), "missing-existing-branch"),
@@ -435,6 +447,7 @@ describe("@feniix/worktrees-core", () => {
     });
     expect(rootedPathWorkspaceValidation.valid).toBe(false);
     expect(rootedPathWorkspaceValidation.directoryName).toBe("/tmp/escape");
+    expect(rootedPathWorkspaceValidation.path).toBe(resolve(defaultWorktreeRoot(repoDir), "/tmp/escape"));
     expect(rootedPathWorkspaceValidation.issues.map((issue) => issue.code)).toContain("INVALID_WORKTREE_PATH_NAME");
   });
 

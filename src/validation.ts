@@ -95,7 +95,9 @@ export function assertBranchReferenceExists(ref: string, options: GitOptions = {
 export function validateCreateWorktree(createOptions: CreateWorktreeOptions): CreateWorktreeValidationResult {
   const { cwd = process.cwd(), gitBin, path, branch, from, createBranch = true } = createOptions;
   const pathAvailable = !worktreePathExists(path, cwd);
-  const branchNameValidation = validateBranchName(branch, { cwd, gitBin });
+  const branchNameValidation = createBranch
+    ? validateBranchName(branch, { cwd, gitBin })
+    : ({ ...validationResult([]), branch } satisfies BranchValidationResult);
   const branchNameValid = branchNameValidation.valid;
   const branchAvailable = createBranch ? !branchExists(branch, { cwd, gitBin }) : true;
   const branchResolvable = createBranch ? true : refExists(branch, { cwd, gitBin });
@@ -235,7 +237,7 @@ export function validatePrepareWorkspace(options: PrepareWorkspaceOptions): Prep
       };
   const path = pathNameValidation.valid
     ? resolveWorktreePath(pathNameValidation.pathName, worktreeRoot)
-    : resolve(worktreeRoot, fallbackDirectoryName);
+    : resolve(worktreeRoot, directoryName);
   const hasWorkspaceName = Boolean(name.trim());
   const issues = [
     ...(hasWorkspaceName
