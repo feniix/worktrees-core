@@ -7,7 +7,36 @@ on:
       - main
 
 jobs:
-  check:
+  verify:
+    name: verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check
+        run: npm run check
+
+      - name: Test
+        run: npm run test
+
+  packaging:
+    name: packaging
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,11 +51,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
+      - name: Build
+        run: npm run build
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Smoke pack
+        run: npm run smoke:pack
 
-      - name: Test with coverage
-        run: npm run test:coverage
+      - name: Pack dry run
+        run: npm pack --dry-run
+
+      - name: Package lint
+        run: npm run lint:pkg
