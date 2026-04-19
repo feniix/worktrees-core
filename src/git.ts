@@ -52,3 +52,23 @@ export function branchExists(branch: string, options: GitOptions = {}): boolean 
     return false;
   }
 }
+
+export function refExists(ref: string, options: GitOptions = {}): boolean {
+  try {
+    execGit(["rev-parse", "--verify", "--quiet", ref], options);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function isValidBranchName(branch: string, options: GitOptions = {}): boolean {
+  try {
+    const trimmed = branch.trim();
+    if (!trimmed) return false;
+    execGit(["check-ref-format", "--branch", trimmed], options);
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -1,32 +1,17 @@
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { assertValidationResult } from "./errors.js";
 import { execGit, findRepoRoot, type GitOptions } from "./git.js";
-
-export interface WorktreeEntry {
-  path: string;
-  head: string;
-  branch?: string;
-  bare: boolean;
-  detached: boolean;
-  locked: boolean;
-  prunable: boolean;
-}
-
-export interface CreateWorktreeOptions extends GitOptions {
-  path: string;
-  branch: string;
-  from?: string;
-  createBranch?: boolean;
-  force?: boolean;
-}
-
-export interface RemoveWorktreeOptions extends GitOptions {
-  path: string;
-  force?: boolean;
-}
+import type { CreateWorktreeOptions, PlannedWorktree, RemoveWorktreeOptions, WorktreeEntry } from "./types.js";
+import { assertCreateWorktreeAllowed, assertRemoveWorktreeAllowed, validateWorktreePathName } from "./validation.js";
 
 export function worktreePathExists(path: string): boolean {
   return existsSync(path);
+}
+
+function normalizePath(path: string): string {
+  const resolved = resolve(path);
+  return existsSync(resolved) ? realpathSync(resolved) : resolved;
 }
 
 export function listWorktrees(startDir = process.cwd(), options: GitOptions = {}): WorktreeEntry[] {
@@ -59,12 +44,34 @@ function parseWorktreeBlock(block: string): WorktreeEntry {
 }
 
 export function getMainWorktree(startDir = process.cwd(), options: GitOptions = {}): WorktreeEntry {
-  const root = findRepoRoot(startDir, options);
-  const worktree = listWorktrees(startDir, options).find((entry) => resolve(entry.path) === resolve(root));
+  const commonGitDir = execGit(["rev-parse", "--git-common-dir"], { ...options, cwd: startDir });
+  const root = dirname(resolve(startDir, commonGitDir));
+  const worktree = listWorktrees(startDir, options).find((entry) => normalizePath(entry.path) === normalizePath(root));
   if (!worktree) {
     throw new Error(`Could not determine main worktree for ${startDir}`);
   }
   return worktree;
+}
+
+export function findWorktreeByPath(
+  path: string,
+  startDir = process.cwd(),
+  options: GitOptions = {},
+): WorktreeEntry | undefined {
+  const target = normalizePath(path);
+  return listWorktrees(startDir, options).find((entry) => normalizePath(entry.path) === target);
+}
+
+export function findWorktreeByBranch(
+  branch: string,
+  startDir = process.cwd(),
+  options: GitOptions = {},
+): WorktreeEntry | undefined {
+  return listWorktrees(startDir, options).find((entry) => entry.branch === branch);
+}
+
+export function isMainWorktree(path: string, startDir = path, options: GitOptions = {}): boolean {
+  return normalizePath(getMainWorktree(startDir, options).path) === normalizePath(path);
 }
 
 export function defaultWorktreeRoot(startDir = process.cwd(), options: GitOptions = {}): string {
@@ -72,11 +79,28 @@ export function defaultWorktreeRoot(startDir = process.cwd(), options: GitOption
 }
 
 export function resolveWorktreePath(pathName: string, worktreeRoot: string): string {
+  assertValidationResult(validateWorktreePathName(pathName));
   return resolve(worktreeRoot, pathName);
 }
 
+export function planCreateWorktree(createOptions: CreateWorktreeOptions): PlannedWorktree {
+  const { path, branch, from, createBranch = true, force = false } = createOptions;
+  return {
+    path,
+    branch,
+    from,
+    createBranch,
+    force,
+  };
+}
+
 export function createWorktree(createOptions: CreateWorktreeOptions): WorktreeEntry {
-  const { cwd = process.cwd(), gitBin, path, branch, from, createBranch = true, force = false } = createOptions;
+  const { cwd = process.cwd(), gitBin } = createOptions;
+  const { path, branch, from, createBranch, force } = planCreateWorktree(createOptions);
+
+  if (!force) {
+    assertCreateWorktreeAllowed(createOptions);
+  }
 
   const args = ["worktree", "add"];
   if (force) args.push("--force");
@@ -95,7 +119,7 @@ export function createWorktree(createOptions: CreateWorktreeOptions): WorktreeEn
 
   execGit(args, { cwd, gitBin });
 
-  const created = listWorktrees(cwd, { cwd, gitBin }).find((entry) => resolve(entry.path) === resolve(path));
+  const created = findWorktreeByPath(path, cwd, { cwd, gitBin });
   if (!created) {
     throw new Error(`Created worktree at ${path}, but it was not present in git worktree list output`);
   }
@@ -104,6 +128,10 @@ export function createWorktree(createOptions: CreateWorktreeOptions): WorktreeEn
 
 export function removeWorktree(removeOptions: RemoveWorktreeOptions): void {
   const { cwd = process.cwd(), gitBin, path, force = false } = removeOptions;
+  if (!force) {
+    assertRemoveWorktreeAllowed(removeOptions);
+  }
+
   const args = ["worktree", "remove"];
   if (force) args.push("--force");
   args.push(path);
@@ -115,13 +143,18 @@ export function pruneWorktrees(startDir = process.cwd(), options: GitOptions = {
 }
 
 export function findCurrentWorktree(startDir = process.cwd(), options: GitOptions = {}): WorktreeEntry | undefined {
-  const absoluteStart = resolve(startDir);
+  const absoluteStart = normalizePath(startDir);
   return listWorktrees(startDir, options).find((entry) => {
-    const worktreePath = resolve(entry.path);
+    const worktreePath = normalizePath(entry.path);
     return (
       absoluteStart === worktreePath ||
       absoluteStart.startsWith(`${worktreePath}/`) ||
       dirname(absoluteStart) === worktreePath
     );
   });
+}
+
+export function isCurrentWorktree(path: string, startDir = path, options: GitOptions = {}): boolean {
+  const current = findCurrentWorktree(startDir, options);
+  return current ? normalizePath(current.path) === normalizePath(path) : false;
 }
