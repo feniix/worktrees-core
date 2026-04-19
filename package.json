@@ -1,7 +1,7 @@
 {
   "name": "@feniix/worktrees-core",
-  "version": "0.1.0",
-  "description": "TypeScript-first library for git worktree primitives, validation, and higher-level workspace workflows",
+  "version": "0.9.0",
+  "description": "TypeScript-first ESM library for git worktree primitives, validation, and higher-level workspace workflows",
   "type": "module",
   "exports": {
     ".": {
@@ -16,6 +16,7 @@
     "dist/**/*.d.ts",
     "docs/**/*.md",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "sideEffects": false,
@@ -34,9 +35,10 @@
     "check:ci": "biome ci . && tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "smoke:pack": "node ./scripts/smoke-pack.mjs",
     "lint:pkg": "publint",
     "lint:types:advisory": "attw --pack .",
-    "release:check": "npm run check && npm run test && npm run build && npm pack --dry-run && npm run lint:pkg",
+    "release:check": "npm run check && npm run test && npm run build && npm run smoke:pack && npm pack --dry-run && npm run lint:pkg",
     "prepublishOnly": "npm run release:check"
   },
   "keywords": [
@@ -44,7 +46,9 @@
     "git-worktree",
     "worktree",
     "workspace",
+    "workspace-automation",
     "typescript",
+    "esm",
     "validation",
     "library"
   ],
@@ -52,7 +56,7 @@
     "type": "git",
     "url": "git+https://github.com/feniix/worktrees-core.git"
   },
-  "author": "feniix",
+  "author": "Sebastian Otaegui",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/feniix/worktrees-core/issues"
