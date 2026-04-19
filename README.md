@@ -32,9 +32,9 @@ This package is **ESM-only**.
 
 ## Stability and support
 
-This repository is preparing for its first stable release.
+This package is now stable.
 
-The intended semver-stable contract for `1.0.0` is:
+The semver-stable contract is:
 - the curated root export surface
 - exported option/result/type shapes
 - documented behavior in this README and `docs/api.md`

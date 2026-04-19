@@ -4,7 +4,7 @@ The root export is intentionally curated to expose the stable, task-oriented API
 
 ## Stability contract
 
-For the upcoming `1.0.0` release, the intended semver-stable contract is:
+The semver-stable contract is:
 - the curated root export surface
 - exported option, result, and shared type shapes
 - behavior documented in `README.md` and this API guide

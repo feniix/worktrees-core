@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-04-19
+
+First stable release.
+
+### Highlights
+
+- The curated root export surface is now the semver-stable public API contract
+- Exported option, result, and shared type shapes are now treated as stable
+- Documented behavior in `README.md` and `docs/api.md` is now part of the stable contract
+- The release gate includes tarball smoke testing and installed-package integration E2E checks
+
+### Support policy
+
+- ESM-only package
+- Node.js `>= 22`
+- `git` must be available on `PATH`
+
+### Stability note
+
+The stable contract covers the curated root exports, exported types, and documented behavior.
+Internal modules, implementation details, and exact error message wording remain outside the stable contract.
+
 ## [0.9.0] - 2026-04-19
 
 Final hardening release before `1.0.0`.
