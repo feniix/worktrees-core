@@ -1,7 +1,7 @@
 {
   "name": "@feniix/worktrees-core",
   "version": "0.1.0",
-  "description": "Shared TypeScript library for git worktree management primitives and higher-level workspace workflows",
+  "description": "TypeScript-first library for git worktree primitives, validation, and higher-level workspace workflows",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -12,6 +12,13 @@
     "README.md",
     "LICENSE"
   ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "biome check .",
@@ -19,12 +26,16 @@
     "check": "npm run lint && npm run typecheck",
     "check:ci": "biome ci . && tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run check && npm run test"
   },
   "keywords": [
     "git",
+    "git-worktree",
     "worktree",
+    "workspace",
     "typescript",
+    "validation",
     "library"
   ],
   "repository": {
