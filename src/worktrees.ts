@@ -1,5 +1,5 @@
 import { existsSync, realpathSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { assertValidationResult } from "./errors.js";
 import { execGit, findRepoRoot, type GitOptions } from "./git.js";
 import type { CreateWorktreeOptions, PlannedWorktree, RemoveWorktreeOptions, WorktreeEntry } from "./types.js";
@@ -79,8 +79,9 @@ export function defaultWorktreeRoot(startDir = process.cwd(), options: GitOption
 }
 
 export function resolveWorktreePath(pathName: string, worktreeRoot: string): string {
-  assertValidationResult(validateWorktreePathName(pathName));
-  return resolve(worktreeRoot, pathName);
+  const validation = validateWorktreePathName(pathName);
+  assertValidationResult(validation);
+  return resolve(worktreeRoot, validation.pathName);
 }
 
 export function planCreateWorktree(createOptions: CreateWorktreeOptions): PlannedWorktree {
@@ -146,11 +147,8 @@ export function findCurrentWorktree(startDir = process.cwd(), options: GitOption
   const absoluteStart = normalizePath(startDir);
   return listWorktrees(startDir, options).find((entry) => {
     const worktreePath = normalizePath(entry.path);
-    return (
-      absoluteStart === worktreePath ||
-      absoluteStart.startsWith(`${worktreePath}/`) ||
-      dirname(absoluteStart) === worktreePath
-    );
+    const relativePath = relative(worktreePath, absoluteStart);
+    return relativePath === "" || (!relativePath.startsWith("..") && !isAbsolute(relativePath));
   });
 }
 

@@ -1,3 +1,5 @@
+import { WorktreesCoreError } from "./errors.js";
+import { parseWorktreePathName, type WorktreePathNameParseResult } from "./path-names.js";
 import type { BranchNamingOptions, PrepareWorkspaceOptions } from "./types.js";
 
 function slugifyBranchName(branch: string): string {
@@ -20,8 +22,25 @@ export function createBranchNameStrategy(prefix?: string, separator: "/" | "-" =
   return (name: string): string => composeBranchName(name, { prefix, separator, sanitize });
 }
 
+export function deriveWorkspaceDirectoryName(name: string): string {
+  return slugifyBranchName(name);
+}
+
+export function parseWorkspaceDirectoryName(
+  options: Pick<PrepareWorkspaceOptions, "name" | "directoryName">,
+): WorktreePathNameParseResult {
+  return parseWorktreePathName(options.directoryName ?? deriveWorkspaceDirectoryName(options.name));
+}
+
 export function resolveWorkspaceDirectoryName(
   options: Pick<PrepareWorkspaceOptions, "name" | "directoryName">,
 ): string {
-  return options.directoryName ?? slugifyBranchName(options.name);
+  const result = parseWorkspaceDirectoryName(options);
+  if (!result.ok) {
+    throw new WorktreesCoreError("INVALID_WORKTREE_PATH_NAME", result.message, {
+      pathName: options.directoryName ?? deriveWorkspaceDirectoryName(options.name),
+    });
+  }
+
+  return result.pathName;
 }

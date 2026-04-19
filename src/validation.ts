@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { assertValidationResult, validationIssue, validationResult } from "./errors.js";
 import { branchExists, type GitOptions, isValidBranchName as gitIsValidBranchName, refExists } from "./git.js";
-import { composeBranchName, resolveWorkspaceDirectoryName } from "./naming.js";
+import { composeBranchName, deriveWorkspaceDirectoryName, parseWorkspaceDirectoryName } from "./naming.js";
 import type {
   BranchNamingPolicy,
   BranchNamingPolicyValidationResult,
@@ -29,19 +29,18 @@ function normalizeComparablePath(path: string): string {
 }
 
 export function validateWorktreePathName(pathName: string): WorktreePathValidationResult {
-  const trimmed = pathName.trim();
-  const issues =
-    trimmed.length > 0 && trimmed !== "." && trimmed !== ".." && !trimmed.includes("../") && !trimmed.includes("..\\")
-      ? []
-      : [
-          validationIssue("INVALID_WORKTREE_PATH_NAME", `Invalid worktree path name: ${pathName}`, {
-            pathName,
-          }),
-        ];
+  const parsed = parseWorkspaceDirectoryName({ name: "", directoryName: pathName });
+  const issues = parsed.ok
+    ? []
+    : [
+        validationIssue("INVALID_WORKTREE_PATH_NAME", parsed.message, {
+          pathName,
+        }),
+      ];
 
   return {
     ...validationResult(issues),
-    pathName,
+    pathName: parsed.ok ? parsed.pathName : pathName,
   };
 }
 
@@ -209,16 +208,32 @@ export function validatePrepareWorkspace(options: PrepareWorkspaceOptions): Prep
     sanitizeBranch = false,
   } = options;
 
-  const directoryName = resolveWorkspaceDirectoryName(options);
+  const fallbackDirectoryName = deriveWorkspaceDirectoryName(name);
+  const directoryNameResult = parseWorkspaceDirectoryName(options);
+  const directoryName = directoryNameResult.ok
+    ? directoryNameResult.pathName
+    : (options.directoryName ?? fallbackDirectoryName);
   const branch = composeBranchName(name, {
     prefix: branchPrefix,
     separator: branchSeparator,
     sanitize: sanitizeBranch,
   });
-  const pathNameValidation = validateWorktreePathName(directoryName);
+  const pathNameValidation: WorktreePathValidationResult = directoryNameResult.ok
+    ? {
+        ...validationResult([]),
+        pathName: directoryNameResult.pathName,
+      }
+    : {
+        ...validationResult([
+          validationIssue("INVALID_WORKTREE_PATH_NAME", directoryNameResult.message, {
+            pathName: options.directoryName ?? directoryName,
+          }),
+        ]),
+        pathName: options.directoryName ?? directoryName,
+      };
   const path = pathNameValidation.valid
-    ? resolveWorktreePath(directoryName, worktreeRoot)
-    : resolve(worktreeRoot, directoryName);
+    ? resolveWorktreePath(pathNameValidation.pathName, worktreeRoot)
+    : resolve(worktreeRoot, fallbackDirectoryName);
   const hasWorkspaceName = Boolean(name.trim());
   const issues = [
     ...(hasWorkspaceName
@@ -250,7 +265,7 @@ export function validatePrepareWorkspace(options: PrepareWorkspaceOptions): Prep
     ...validationResult(issues),
     name,
     branch,
-    directoryName,
+    directoryName: pathNameValidation.valid ? pathNameValidation.pathName : directoryName,
     path,
   };
 }

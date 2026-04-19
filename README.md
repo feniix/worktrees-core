@@ -169,6 +169,13 @@ These are the primary entry points most consumers should use.
 - `createBranchNameStrategy(prefix?, separator?, sanitize?)`
 - `resolveWorkspaceDirectoryName(options)`
 
+`directoryName` is treated as a safe relative workspace path under `worktreeRoot`:
+- nested paths are allowed, such as `team/backend/login-flow`
+- `/` and `\\` are accepted as input separators
+- rooted or absolute paths are rejected, including UNC paths
+- `.` and `..` segments are rejected
+- successful path-like outputs are canonicalized to `/`
+
 #### Worktree discovery helpers
 
 - `listWorktrees(startDir, options)`
@@ -217,7 +224,7 @@ By default the library rejects a few unsafe operations before shelling out to `g
 You can also inspect the typed validation helpers first and decide how to surface issues in your own UI or CLI:
 
 - invalid branch names
-- invalid worktree path names like `..` or `../escape`
+- invalid worktree path names like `..`, `../escape`, `a/./b`, absolute paths, or UNC paths
 - creating a worktree when the target path already exists
 - creating a branch-backed worktree when the branch already exists
 - creating from a missing start point
