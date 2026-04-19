@@ -24,8 +24,8 @@ import {
   worktreePathExists,
 } from "./worktrees.js";
 
-function normalizeComparablePath(path: string): string {
-  return resolve(path);
+function normalizeComparablePath(path: string, baseDir = process.cwd()): string {
+  return resolve(baseDir, path);
 }
 
 export function validateWorktreePathName(pathName: string): WorktreePathValidationResult {
@@ -94,7 +94,7 @@ export function assertBranchReferenceExists(ref: string, options: GitOptions = {
 
 export function validateCreateWorktree(createOptions: CreateWorktreeOptions): CreateWorktreeValidationResult {
   const { cwd = process.cwd(), gitBin, path, branch, from, createBranch = true } = createOptions;
-  const pathAvailable = !worktreePathExists(path);
+  const pathAvailable = !worktreePathExists(path, cwd);
   const branchNameValidation = validateBranchName(branch, { cwd, gitBin });
   const branchNameValid = branchNameValidation.valid;
   const branchAvailable = createBranch ? !branchExists(branch, { cwd, gitBin }) : true;
@@ -138,9 +138,11 @@ export function validateRemoveWorktree(removeOptions: RemoveWorktreeOptions): Re
   const exists = Boolean(target);
   const main = exists ? getMainWorktree(cwd, { cwd, gitBin }) : undefined;
   const current = exists ? findCurrentWorktree(cwd, { cwd, gitBin }) : undefined;
-  const isMain = Boolean(target && main && normalizeComparablePath(target.path) === normalizeComparablePath(main.path));
+  const isMain = Boolean(
+    target && main && normalizeComparablePath(target.path, cwd) === normalizeComparablePath(main.path, cwd),
+  );
   const isCurrent = Boolean(
-    target && current && normalizeComparablePath(target.path) === normalizeComparablePath(current.path),
+    target && current && normalizeComparablePath(target.path, cwd) === normalizeComparablePath(current.path, cwd),
   );
   const issues = [
     ...(!exists ? [validationIssue("WORKTREE_NOT_FOUND", `Worktree not found: ${path}`, { path })] : []),

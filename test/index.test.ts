@@ -1,7 +1,7 @@
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { assertValidationResult, toWorktreesCoreError } from "../src/errors.js";
 import { execGit, findGitDir } from "../src/git.js";
@@ -220,6 +220,37 @@ describe("@feniix/worktrees-core", () => {
 
     removeWorktree({ cwd: repoDir, path });
     expect(listWorktrees(repoDir)).toHaveLength(1);
+  });
+
+  it("resolves relative low-level worktree paths against cwd like git does", () => {
+    const relativePath = join("..", `${basename(repoDir)}-relative`, "feature-auth-flow");
+    const expectedPath = resolve(repoDir, relativePath);
+
+    const validation = validateCreateWorktree({
+      cwd: repoDir,
+      path: relativePath,
+      branch: "feature/auth-flow",
+      from: "main",
+    });
+    expect(validation.valid).toBe(true);
+    expect(validation.pathAvailable).toBe(true);
+
+    const created = createWorktree({
+      cwd: repoDir,
+      path: relativePath,
+      branch: "feature/auth-flow",
+      from: "main",
+    });
+    expect(canonicalPath(created.path)).toBe(canonicalPath(expectedPath));
+    expect(canonicalPath(findWorktreeByPath(relativePath, repoDir)?.path ?? "")).toBe(canonicalPath(expectedPath));
+    expect(canonicalPath(findCurrentWorktree(expectedPath)?.path ?? "")).toBe(canonicalPath(expectedPath));
+    expect(isCurrentWorktree(expectedPath, expectedPath)).toBe(true);
+
+    const removeValidation = validateRemoveWorktree({ cwd: repoDir, path: relativePath });
+    expect(removeValidation.exists).toBe(true);
+
+    removeWorktree({ cwd: repoDir, path: relativePath });
+    expect(findWorktreeByPath(relativePath, repoDir)).toBeUndefined();
   });
 
   it("prepares a higher-level workspace from a name and branch prefix", () => {
