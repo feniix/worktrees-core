@@ -76,15 +76,7 @@ export function resolveWorktreePath(pathName: string, worktreeRoot: string): str
 }
 
 export function createWorktree(createOptions: CreateWorktreeOptions): WorktreeEntry {
-  const {
-    cwd = process.cwd(),
-    gitBin,
-    path,
-    branch,
-    from,
-    createBranch = true,
-    force = false,
-  } = createOptions;
+  const { cwd = process.cwd(), gitBin, path, branch, from, createBranch = true, force = false } = createOptions;
 
   const args = ["worktree", "add"];
   if (force) args.push("--force");
@@ -126,6 +118,10 @@ export function findCurrentWorktree(startDir = process.cwd(), options: GitOption
   const absoluteStart = resolve(startDir);
   return listWorktrees(startDir, options).find((entry) => {
     const worktreePath = resolve(entry.path);
-    return absoluteStart === worktreePath || absoluteStart.startsWith(`${worktreePath}/`) || dirname(absoluteStart) === worktreePath;
+    return (
+      absoluteStart === worktreePath ||
+      absoluteStart.startsWith(`${worktreePath}/`) ||
+      dirname(absoluteStart) === worktreePath
+    );
   });
 }

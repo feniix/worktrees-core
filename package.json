@@ -14,7 +14,12 @@
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "check": "npm run lint && npm run typecheck",
+    "check:ci": "biome ci . && tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "git",
@@ -33,6 +38,7 @@
   },
   "homepage": "https://github.com/feniix/worktrees-core#readme",
   "devDependencies": {
+    "@biomejs/biome": "^2.3.5",
     "@types/node": "^22.19.17",
     "@vitest/coverage-v8": "^4.1.4",
     "typescript": "^5.5.0",
