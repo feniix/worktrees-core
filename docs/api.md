@@ -2,9 +2,25 @@
 
 The root export is intentionally curated to expose the stable, task-oriented API surface for the library.
 
+## Stability contract
+
+For the upcoming `1.0.0` release, the intended semver-stable contract is:
+- the curated root export surface
+- exported option, result, and shared type shapes
+- behavior documented in `README.md` and this API guide
+
+The following are intentionally not part of the stable contract:
+- internal modules
+- implementation details
+- exact error message wording
+
 ## Recommended API
 
 These are the primary entry points most consumers should use.
+- Prefer `planPrepareWorkspace()` / `prepareWorkspace()` for higher-level workspace flows.
+- Use `createWorktree()` / `removeWorktree()` when you want lower-level git-like control.
+- `directoryName` is the strict high-level workspace path input.
+- low-level `path` inputs follow git semantics and may be relative to `cwd`.
 
 ### Worktree planning and workflows
 

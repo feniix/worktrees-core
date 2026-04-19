@@ -30,6 +30,20 @@ This package is **ESM-only**.
 - ESM consumers can import it normally.
 - CommonJS consumers must use dynamic `import()` instead of `require()`.
 
+## Stability and support
+
+This repository is preparing for its first stable release.
+
+The intended semver-stable contract for `1.0.0` is:
+- the curated root export surface
+- exported option/result/type shapes
+- documented behavior in this README and `docs/api.md`
+
+The following are not part of the stable contract:
+- internal modules
+- implementation details
+- exact error message wording
+
 ## Quick start
 
 ```ts
@@ -96,6 +110,7 @@ if (!validation.valid) {
 
 - [API guide](./docs/api.md)
 - [Development and release guide](./docs/development.md)
+- [Changelog](./CHANGELOG.md)
 
 ## License
 
