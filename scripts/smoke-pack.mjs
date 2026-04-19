@@ -8,12 +8,37 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const tempRoot = mkdtempSync(join(tmpdir(), "worktrees-core-smoke-"));
 let tarballPath;
 
+function logStep(message) {
+  console.log(`[smoke:pack] ${message}`);
+}
+
+function run(command, args, options = {}) {
+  try {
+    return execFileSync(command, args, {
+      cwd: repoRoot,
+      stdio: "pipe",
+      encoding: "utf8",
+      ...options,
+    });
+  } catch (error) {
+    console.error(`[smoke:pack] Command failed: ${command} ${args.join(" ")}`);
+    if (error && typeof error === "object") {
+      const stdout = "stdout" in error && typeof error.stdout === "string" ? error.stdout : "";
+      const stderr = "stderr" in error && typeof error.stderr === "string" ? error.stderr : "";
+      if (stdout.trim()) {
+        console.error("[smoke:pack] stdout:\n" + stdout.trim());
+      }
+      if (stderr.trim()) {
+        console.error("[smoke:pack] stderr:\n" + stderr.trim());
+      }
+    }
+    throw error;
+  }
+}
+
 try {
-  const packJson = execFileSync("npm", ["pack", "--json"], {
-    cwd: repoRoot,
-    stdio: "pipe",
-    encoding: "utf8",
-  });
+  logStep("Packing tarball");
+  const packJson = run("npm", ["pack", "--json"]);
   const packResult = JSON.parse(packJson);
   const [{ filename }] = packResult;
   tarballPath = resolve(repoRoot, filename);
@@ -21,6 +46,7 @@ try {
   const consumerDir = join(tempRoot, "consumer");
   mkdirSync(consumerDir, { recursive: true });
 
+  logStep("Creating temp consumer project");
   writeFileSync(
     join(consumerDir, "package.json"),
     JSON.stringify(
@@ -34,12 +60,10 @@ try {
     ) + "\n",
   );
 
-  execFileSync("npm", ["install", "--no-package-lock", tarballPath], {
-    cwd: consumerDir,
-    stdio: "pipe",
-    encoding: "utf8",
-  });
+  logStep("Installing packed tarball");
+  run("npm", ["install", "--no-package-lock", tarballPath], { cwd: consumerDir });
 
+  logStep("Running runtime import check");
   writeFileSync(
     join(consumerDir, "runtime-check.mjs"),
     `import {
@@ -67,13 +91,9 @@ if (!validation.valid || validation.pathName !== "team/platform/billing-portal")
 }
 `,
   );
+  run("node", [join(consumerDir, "runtime-check.mjs")], { cwd: consumerDir });
 
-  execFileSync("node", [join(consumerDir, "runtime-check.mjs")], {
-    cwd: consumerDir,
-    stdio: "pipe",
-    encoding: "utf8",
-  });
-
+  logStep("Running TypeScript consumer check");
   writeFileSync(
     join(consumerDir, "tsconfig.json"),
     JSON.stringify(
@@ -116,11 +136,9 @@ if (!branch || !result.valid) {
   );
 
   const tscBin = resolve(repoRoot, "node_modules", "typescript", "bin", "tsc");
-  execFileSync("node", [tscBin, "-p", join(consumerDir, "tsconfig.json")], {
-    cwd: consumerDir,
-    stdio: "pipe",
-    encoding: "utf8",
-  });
+  run("node", [tscBin, "-p", join(consumerDir, "tsconfig.json")], { cwd: consumerDir });
+
+  logStep("Smoke test passed");
 } finally {
   if (tarballPath) {
     unlinkSync(tarballPath);
