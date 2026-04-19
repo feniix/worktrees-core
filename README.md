@@ -110,6 +110,7 @@ if (!validation.valid) {
 ## Documentation
 
 - [API guide](./docs/api.md)
+- [Using the library in agents](./docs/agent-usage.md)
 - [Development and release guide](./docs/development.md)
 - [Changelog](./CHANGELOG.md)
 
