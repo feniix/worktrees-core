@@ -2,7 +2,7 @@ import { existsSync, realpathSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { assertValidationResult } from "./errors.js";
 import { execGit, findRepoRoot, type GitOptions } from "./git.js";
-import type { CreateWorktreeOptions, RemoveWorktreeOptions, WorktreeEntry } from "./types.js";
+import type { CreateWorktreeOptions, PlannedWorktree, RemoveWorktreeOptions, WorktreeEntry } from "./types.js";
 import { assertCreateWorktreeAllowed, assertRemoveWorktreeAllowed, validateWorktreePathName } from "./validation.js";
 
 export function worktreePathExists(path: string): boolean {
@@ -83,8 +83,20 @@ export function resolveWorktreePath(pathName: string, worktreeRoot: string): str
   return resolve(worktreeRoot, pathName);
 }
 
+export function planCreateWorktree(createOptions: CreateWorktreeOptions): PlannedWorktree {
+  const { path, branch, from, createBranch = true, force = false } = createOptions;
+  return {
+    path,
+    branch,
+    from,
+    createBranch,
+    force,
+  };
+}
+
 export function createWorktree(createOptions: CreateWorktreeOptions): WorktreeEntry {
-  const { cwd = process.cwd(), gitBin, path, branch, from, createBranch = true, force = false } = createOptions;
+  const { cwd = process.cwd(), gitBin } = createOptions;
+  const { path, branch, from, createBranch, force } = planCreateWorktree(createOptions);
 
   if (!force) {
     assertCreateWorktreeAllowed(createOptions);

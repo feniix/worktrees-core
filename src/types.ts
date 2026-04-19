@@ -37,13 +37,25 @@ export interface PrepareWorkspaceOptions extends GitOptions {
   branchSeparator?: "/" | "-";
   sanitizeBranch?: boolean;
   from?: string;
+  directoryName?: string;
+  /** @deprecated Use directoryName instead. */
   pathName?: string;
   createBranch?: boolean;
   force?: boolean;
 }
 
+export interface PlannedWorktree {
+  path: string;
+  branch: string;
+  from?: string;
+  createBranch: boolean;
+  force: boolean;
+}
+
 export interface PreparedWorkspace {
   branch: string;
+  directoryName: string;
+  /** @deprecated Use directoryName instead. */
   pathName: string;
   path: string;
 }
@@ -80,6 +92,8 @@ export interface RemoveWorktreeValidationResult extends ValidationResult {
 export interface PrepareWorkspaceValidationResult extends ValidationResult {
   name: string;
   branch: string;
+  directoryName: string;
+  /** @deprecated Use directoryName instead. */
   pathName: string;
   path: string;
 }

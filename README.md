@@ -23,9 +23,8 @@ npm install @feniix/worktrees-core
 
 - Node.js `>= 22`
 - `git` available on `PATH`
-- A TypeScript-aware toolchain or bundler
 
-This package currently ships **TypeScript source files** in `src/` and is intended for TypeScript-first consumers.
+The published package ships compiled ESM in `dist/` plus `.d.ts` declaration files for TypeScript consumers.
 
 ## Usage
 
@@ -49,26 +48,33 @@ const workspace = prepareWorkspace({
   worktreeRoot: defaultWorktreeRoot(cwd),
 });
 
+console.log(workspace.directoryName); // "login-flow"
+
 console.log(worktrees);
 console.log(workspace);
 ```
 
-### Validate first, then execute
+### Plan, validate, then execute
 
 ```ts
 import {
   createWorktree,
-  defaultWorktreeRoot,
-  validateCreateWorktree,
+  planPrepareWorkspace,
+  validatePrepareWorkspace,
 } from "@feniix/worktrees-core";
 
 const cwd = process.cwd();
-const path = `${defaultWorktreeRoot(cwd)}/feature-login-flow`;
-
-const validation = validateCreateWorktree({
+const planned = planPrepareWorkspace({
   cwd,
-  path,
-  branch: "feature/login-flow",
+  name: "login-flow",
+  branchPrefix: "feature",
+  from: "main",
+});
+
+const validation = validatePrepareWorkspace({
+  cwd,
+  name: "login-flow",
+  branchPrefix: "feature",
   from: "main",
 });
 
@@ -77,8 +83,8 @@ if (!validation.valid) {
 } else {
   const worktree = createWorktree({
     cwd,
-    path,
-    branch: "feature/login-flow",
+    path: planned.path,
+    branch: planned.branch,
     from: "main",
   });
 
@@ -130,6 +136,7 @@ console.log({ branch, branchFromStrategy, policy });
 - `RemoveWorktreeOptions`
 - `PrepareWorkspaceOptions`
 - `PreparedWorkspace`
+- `PlannedWorktree`
 - `BranchNamingOptions`
 - `BranchNamingPolicy`
 
@@ -171,6 +178,7 @@ console.log({ branch, branchFromStrategy, policy });
 - `defaultWorktreeRoot(startDir, options)`
 - `resolveWorktreePath(pathName, worktreeRoot)`
 - `worktreePathExists(path)`
+- `planCreateWorktree(options)`
 - `createWorktree(options)`
 - `removeWorktree(options)`
 - `pruneWorktrees(startDir, options)`
@@ -181,6 +189,8 @@ console.log({ branch, branchFromStrategy, policy });
 - `composeBranchName(name, options)`
 - `createBranchNameStrategy(prefix?, separator?, sanitize?)`
 - `branchNameStrategy(prefix?, separator?, sanitize?)` (alias)
+- `resolveWorkspaceDirectoryName(options)`
+- `planPrepareWorkspace(options)`
 - `prepareWorkspace(options)`
 
 ## Safety behavior
@@ -205,6 +215,8 @@ Before publishing:
 npm install
 npm run check
 npm run test
+npm run build
+npm pack --dry-run
 ```
 
 `npm publish` will also run `prepublishOnly`.

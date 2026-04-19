@@ -24,7 +24,13 @@ export function createBranchNameStrategy(prefix?: string, separator: "/" | "-" =
 
 export const branchNameStrategy = createBranchNameStrategy;
 
-export function prepareWorkspace(options: PrepareWorkspaceOptions): PreparedWorkspace {
+export function resolveWorkspaceDirectoryName(
+  options: Pick<PrepareWorkspaceOptions, "name" | "directoryName" | "pathName">,
+): string {
+  return options.directoryName ?? options.pathName ?? slugifyBranchName(options.name);
+}
+
+export function planPrepareWorkspace(options: PrepareWorkspaceOptions): PreparedWorkspace {
   const {
     cwd = process.cwd(),
     gitBin,
@@ -33,18 +39,27 @@ export function prepareWorkspace(options: PrepareWorkspaceOptions): PreparedWork
     branchPrefix,
     branchSeparator,
     sanitizeBranch = false,
-    from,
-    pathName = slugifyBranchName(name),
-    createBranch = true,
-    force = false,
   } = options;
 
+  const directoryName = resolveWorkspaceDirectoryName(options);
   const branch = composeBranchName(name, {
     prefix: branchPrefix,
     separator: branchSeparator,
     sanitize: sanitizeBranch,
   });
-  const path = resolveWorktreePath(pathName, worktreeRoot);
+  const path = resolveWorktreePath(directoryName, worktreeRoot);
+
+  return {
+    branch,
+    directoryName,
+    pathName: directoryName,
+    path,
+  };
+}
+
+export function prepareWorkspace(options: PrepareWorkspaceOptions): PreparedWorkspace {
+  const { cwd = process.cwd(), gitBin, from, createBranch = true, force = false } = options;
+  const planned = planPrepareWorkspace(options);
 
   if (!force) {
     assertPrepareWorkspaceAllowed(options);
@@ -53,12 +68,12 @@ export function prepareWorkspace(options: PrepareWorkspaceOptions): PreparedWork
   createWorktree({
     cwd,
     gitBin,
-    path,
-    branch,
+    path: planned.path,
+    branch: planned.branch,
     from,
     createBranch,
     force,
   });
 
-  return { branch, pathName, path };
+  return planned;
 }

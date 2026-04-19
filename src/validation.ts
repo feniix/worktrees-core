@@ -15,7 +15,7 @@ import type {
   RemoveWorktreeValidationResult,
   WorktreePathValidationResult,
 } from "./types.js";
-import { composeBranchName, slugifyBranchName } from "./workflows.js";
+import { composeBranchName, resolveWorkspaceDirectoryName } from "./workflows.js";
 import {
   defaultWorktreeRoot,
   findCurrentWorktree,
@@ -209,19 +209,21 @@ export function validatePrepareWorkspace(options: PrepareWorkspaceOptions): Prep
     worktreeRoot = defaultWorktreeRoot(cwd, { cwd, gitBin }),
     branchPrefix,
     from,
-    pathName = slugifyBranchName(name),
     createBranch = true,
     branchSeparator,
     sanitizeBranch = false,
   } = options;
 
+  const directoryName = resolveWorkspaceDirectoryName(options);
   const branch = composeBranchName(name, {
     prefix: branchPrefix,
     separator: branchSeparator,
     sanitize: sanitizeBranch,
   });
-  const pathNameValidation = validateWorktreePathName(pathName);
-  const path = pathNameValidation.valid ? resolveWorktreePath(pathName, worktreeRoot) : resolve(worktreeRoot, pathName);
+  const pathNameValidation = validateWorktreePathName(directoryName);
+  const path = pathNameValidation.valid
+    ? resolveWorktreePath(directoryName, worktreeRoot)
+    : resolve(worktreeRoot, directoryName);
   const hasWorkspaceName = Boolean(name.trim());
   const issues = [
     ...(hasWorkspaceName
@@ -253,7 +255,8 @@ export function validatePrepareWorkspace(options: PrepareWorkspaceOptions): Prep
     ...validationResult(issues),
     name,
     branch,
-    pathName,
+    directoryName,
+    pathName: directoryName,
     path,
   };
 }
