@@ -25,7 +25,6 @@ export function planPrepareWorkspace(options: PrepareWorkspaceOptions): PlannedW
   return {
     branch,
     directoryName,
-    pathName: directoryName,
     path,
   };
 }

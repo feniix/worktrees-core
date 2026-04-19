@@ -26,6 +26,10 @@ npm install @feniix/worktrees-core
 
 The published package ships compiled ESM in `dist/` plus `.d.ts` declaration files for TypeScript consumers.
 
+## Design goals
+
+This library is still pre-adoption, so the API is intentionally optimized for long-term clarity over backward-compatibility aliases.
+
 ## Module format
 
 This package is **ESM-only**.
@@ -56,7 +60,6 @@ const workspace = prepareWorkspace({
 });
 
 console.log(workspace.directoryName); // "login-flow"
-// workspace.pathName is still available as a deprecated compatibility alias
 
 console.log(worktrees);
 console.log(workspace);
@@ -127,15 +130,68 @@ console.log({ branch, branchFromStrategy, policy });
 
 ## API overview
 
-### Git helpers
+The root export is intentionally curated to expose the stable, task-oriented API surface for the library.
 
-- `execGit(args, options)`
+### Recommended API
+
+These are the primary entry points most consumers should use.
+
+#### Worktree planning and workflows
+
+- `planPrepareWorkspace(options)`
+- `prepareWorkspace(options)`
+- `planCreateWorktree(options)`
+- `createWorktree(options)`
+- `removeWorktree(options)`
+- `pruneWorktrees(startDir, options)`
+
+#### Validation helpers
+
+- `validateBranchName(branch, options)`
+- `assertValidBranchName(branch, options)`
+- `validateBranchReference(ref, options)`
+- `assertBranchReferenceExists(ref, options)`
+- `validateWorktreePathName(pathName)`
+- `assertWorktreePathName(pathName)`
+- `isValidWorktreePathName(pathName)`
+- `validateCreateWorktree(options)`
+- `assertCreateWorktreeAllowed(options)`
+- `validateRemoveWorktree(options)`
+- `assertRemoveWorktreeAllowed(options)`
+- `validateBranchNamingPolicy(name, policy)`
+- `assertBranchNamingPolicy(name, policy)`
+- `validatePrepareWorkspace(options)`
+- `assertPrepareWorkspaceAllowed(options)`
+
+#### Naming helpers
+
+- `composeBranchName(name, options)`
+- `createBranchNameStrategy(prefix?, separator?, sanitize?)`
+- `resolveWorkspaceDirectoryName(options)`
+
+#### Worktree discovery helpers
+
+- `listWorktrees(startDir, options)`
+- `getMainWorktree(startDir, options)`
+- `findCurrentWorktree(startDir, options)`
+- `findWorktreeByPath(path, startDir, options)`
+- `findWorktreeByBranch(branch, startDir, options)`
+- `isMainWorktree(path, startDir, options)`
+- `isCurrentWorktree(path, startDir, options)`
+- `defaultWorktreeRoot(startDir, options)`
+- `resolveWorktreePath(pathName, worktreeRoot)`
+- `worktreePathExists(path)`
+
+### Advanced root exports
+
+These are intentionally kept available at the root, but are lower-level than the recommended workflow APIs.
+
 - `findRepoRoot(startDir, options)`
-- `findGitDir(startDir, options)`
 - `isGitRepository(startDir, options)`
 - `branchExists(branch, options)`
 - `refExists(ref, options)`
 - `isValidBranchName(branch, options)`
+- `WorktreesCoreError`
 
 ### Shared types
 
@@ -154,59 +210,6 @@ console.log({ branch, branchFromStrategy, policy });
 - `WorktreesCoreError`
 - `ValidationIssue`
 - `ValidationResult`
-- `toWorktreesCoreError(issue)`
-- `assertValidationResult(result)`
-
-### Validation helpers
-
-- `validateBranchName(branch, options)`
-- `assertValidBranchName(branch, options)`
-- `validateBranchReference(ref, options)`
-- `assertBranchReferenceExists(ref, options)`
-- `validateWorktreePathName(pathName)`
-- `assertWorktreePathName(pathName)`
-- `isValidWorktreePathName(pathName)`
-- `validateCreateWorktree(options)`
-- `assertCreateWorktreeAllowed(options)`
-- `validateRemoveWorktree(options)`
-- `assertRemoveWorktreeAllowed(options)`
-- `validateBranchNamingPolicy(name, policy)`
-- `assertBranchNamingPolicy(name, policy)`
-- `validatePrepareWorkspace(options)`
-- `assertPrepareWorkspaceAllowed(options)`
-
-### Worktree primitives
-
-- `listWorktrees(startDir, options)`
-- `getMainWorktree(startDir, options)`
-- `findWorktreeByPath(path, startDir, options)`
-- `findWorktreeByBranch(branch, startDir, options)`
-- `findCurrentWorktree(startDir, options)`
-- `isMainWorktree(path, startDir, options)`
-- `isCurrentWorktree(path, startDir, options)`
-- `defaultWorktreeRoot(startDir, options)`
-- `resolveWorktreePath(pathName, worktreeRoot)`
-- `worktreePathExists(path)`
-- `planCreateWorktree(options)`
-- `createWorktree(options)`
-- `removeWorktree(options)`
-- `pruneWorktrees(startDir, options)`
-
-### Naming helpers
-
-- `slugifyBranchName(branch)`
-- `composeBranchName(name, options)`
-- `createBranchNameStrategy(prefix?, separator?, sanitize?)`
-- `branchNameStrategy(prefix?, separator?, sanitize?)` (alias)
-- `resolveBranchName(name, options)`
-- `resolveWorkspaceDirectoryName(options)`
-
-### Higher-level workflows
-
-- `planPrepareWorkspace(options)`
-- `prepareWorkspace(options)`
-
-`PrepareWorkspaceOptions.pathName` and `PreparedWorkspace.pathName` remain available as deprecated compatibility aliases for `directoryName`.
 
 ## Safety behavior
 

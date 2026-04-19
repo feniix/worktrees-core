@@ -3,24 +3,22 @@ import { existsSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { assertValidationResult, toWorktreesCoreError } from "../src/errors.js";
+import { execGit, findGitDir } from "../src/git.js";
 import {
   assertBranchNamingPolicy,
   assertBranchReferenceExists,
   assertCreateWorktreeAllowed,
   assertPrepareWorkspaceAllowed,
   assertRemoveWorktreeAllowed,
-  assertValidationResult,
   assertValidBranchName,
   assertWorktreePathName,
   branchExists,
-  branchNameStrategy,
   composeBranchName,
   createBranchNameStrategy,
   createWorktree,
   defaultWorktreeRoot,
-  execGit,
   findCurrentWorktree,
-  findGitDir,
   findRepoRoot,
   findWorktreeByBranch,
   findWorktreeByPath,
@@ -36,11 +34,8 @@ import {
   prepareWorkspace,
   pruneWorktrees,
   removeWorktree,
-  resolveBranchName,
   resolveWorkspaceDirectoryName,
   resolveWorktreePath,
-  slugifyBranchName,
-  toWorktreesCoreError,
   validateBranchName,
   validateBranchNamingPolicy,
   validateBranchReference,
@@ -83,7 +78,7 @@ describe("@feniix/worktrees-core", () => {
   });
 
   it("validates branch names and resolves default worktree paths", () => {
-    expect(slugifyBranchName("feature/auth-flow")).toBe("feature-auth-flow");
+    expect(resolveWorkspaceDirectoryName({ name: "feature/auth-flow" })).toBe("feature-auth-flow");
     expect(defaultWorktreeRoot(repoDir)).toBe(`${canonicalPath(repoDir)}.worktrees`);
     expect(isValidBranchName("feature/auth-flow", { cwd: repoDir })).toBe(true);
     expect(isValidBranchName("feature..auth", { cwd: repoDir })).toBe(false);
@@ -110,17 +105,14 @@ describe("@feniix/worktrees-core", () => {
 
   it("supports branch naming strategies and workspace planning helpers", () => {
     expect(composeBranchName("login-flow", { prefix: "feature" })).toBe("feature/login-flow");
-    expect(resolveBranchName("login-flow", { prefix: "feature" })).toBe("feature/login-flow");
     expect(composeBranchName("Login Flow", { prefix: "feature", sanitize: true })).toBe("feature/Login-Flow");
     expect(composeBranchName("login-flow", { prefix: "feature", separator: "-" })).toBe("feature-login-flow");
 
     const strategy = createBranchNameStrategy("feature", "/", true);
     expect(strategy("Login Flow")).toBe("feature/Login-Flow");
-    expect(branchNameStrategy("feature", "/", true)("Login Flow")).toBe("feature/Login-Flow");
 
     expect(resolveWorkspaceDirectoryName({ name: "Login Flow" })).toBe("Login-Flow");
     expect(resolveWorkspaceDirectoryName({ name: "ignored", directoryName: "custom-dir" })).toBe("custom-dir");
-    expect(resolveWorkspaceDirectoryName({ name: "ignored", pathName: "legacy-dir" })).toBe("legacy-dir");
 
     const validPolicy = validateBranchNamingPolicy("login-flow", {
       cwd: repoDir,
@@ -215,7 +207,6 @@ describe("@feniix/worktrees-core", () => {
     });
     expect(plannedWorkspace.branch).toBe("feature/login-flow");
     expect(plannedWorkspace.directoryName).toBe("login-flow");
-    expect(plannedWorkspace.pathName).toBe("login-flow");
 
     const prepareValidation = validatePrepareWorkspace({
       cwd: repoDir,
@@ -243,7 +234,6 @@ describe("@feniix/worktrees-core", () => {
 
     expect(prepared.branch).toBe("feature/login-flow");
     expect(prepared.directoryName).toBe("login-flow");
-    expect(prepared.pathName).toBe("login-flow");
     expect(prepared.path).toContain(".worktrees/login-flow");
 
     const worktrees = listWorktrees(repoDir);

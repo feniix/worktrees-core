@@ -1,6 +1,6 @@
 import type { BranchNamingOptions, PrepareWorkspaceOptions } from "./types.js";
 
-export function slugifyBranchName(branch: string): string {
+function slugifyBranchName(branch: string): string {
   return branch
     .trim()
     .replace(/^\/+|\/+$/g, "")
@@ -20,14 +20,8 @@ export function createBranchNameStrategy(prefix?: string, separator: "/" | "-" =
   return (name: string): string => composeBranchName(name, { prefix, separator, sanitize });
 }
 
-export const branchNameStrategy = createBranchNameStrategy;
-
 export function resolveWorkspaceDirectoryName(
-  options: Pick<PrepareWorkspaceOptions, "name" | "directoryName" | "pathName">,
+  options: Pick<PrepareWorkspaceOptions, "name" | "directoryName">,
 ): string {
-  return options.directoryName ?? options.pathName ?? slugifyBranchName(options.name);
-}
-
-export function resolveBranchName(name: string, options: BranchNamingOptions = {}): string {
-  return composeBranchName(name, options);
+  return options.directoryName ?? slugifyBranchName(options.name);
 }

@@ -1,7 +1,49 @@
-export * from "./errors.js";
-export * from "./git.js";
-export * from "./naming.js";
+export { type ValidationIssue, type ValidationResult, WorktreesCoreError } from "./errors.js";
+export {
+  branchExists,
+  findRepoRoot,
+  type GitOptions,
+  isGitRepository,
+  isValidBranchName,
+  refExists,
+} from "./git.js";
+export {
+  composeBranchName,
+  createBranchNameStrategy,
+  resolveWorkspaceDirectoryName,
+} from "./naming.js";
 export * from "./types.js";
-export * from "./validation.js";
-export * from "./workflows.js";
-export * from "./worktrees.js";
+export {
+  assertBranchNamingPolicy,
+  assertBranchReferenceExists,
+  assertCreateWorktreeAllowed,
+  assertPrepareWorkspaceAllowed,
+  assertRemoveWorktreeAllowed,
+  assertValidBranchName,
+  assertWorktreePathName,
+  isValidWorktreePathName,
+  validateBranchName,
+  validateBranchNamingPolicy,
+  validateBranchReference,
+  validateCreateWorktree,
+  validatePrepareWorkspace,
+  validateRemoveWorktree,
+  validateWorktreePathName,
+} from "./validation.js";
+export { planPrepareWorkspace, prepareWorkspace } from "./workflows.js";
+export {
+  createWorktree,
+  defaultWorktreeRoot,
+  findCurrentWorktree,
+  findWorktreeByBranch,
+  findWorktreeByPath,
+  getMainWorktree,
+  isCurrentWorktree,
+  isMainWorktree,
+  listWorktrees,
+  planCreateWorktree,
+  pruneWorktrees,
+  removeWorktree,
+  resolveWorktreePath,
+  worktreePathExists,
+} from "./worktrees.js";

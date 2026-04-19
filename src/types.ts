@@ -38,8 +38,6 @@ export interface PrepareWorkspaceOptions extends GitOptions {
   sanitizeBranch?: boolean;
   from?: string;
   directoryName?: string;
-  /** @deprecated Use directoryName instead. */
-  pathName?: string;
   createBranch?: boolean;
   force?: boolean;
 }
@@ -55,8 +53,6 @@ export interface PlannedWorktree {
 export interface PlannedWorkspace {
   branch: string;
   directoryName: string;
-  /** @deprecated Use directoryName instead. */
-  pathName: string;
   path: string;
 }
 
@@ -95,8 +91,6 @@ export interface PrepareWorkspaceValidationResult extends ValidationResult {
   name: string;
   branch: string;
   directoryName: string;
-  /** @deprecated Use directoryName instead. */
-  pathName: string;
   path: string;
 }
 

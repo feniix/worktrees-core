@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { assertValidationResult, validationIssue, validationResult } from "./errors.js";
 import { branchExists, type GitOptions, isValidBranchName as gitIsValidBranchName, refExists } from "./git.js";
-import { composeBranchName, resolveBranchName, resolveWorkspaceDirectoryName } from "./naming.js";
+import { composeBranchName, resolveWorkspaceDirectoryName } from "./naming.js";
 import type {
   BranchNamingPolicy,
   BranchNamingPolicyValidationResult,
@@ -176,7 +176,7 @@ export function validateBranchNamingPolicy(
   name: string,
   policy: BranchNamingPolicy = {},
 ): BranchNamingPolicyValidationResult {
-  const branch = resolveBranchName(name, policy);
+  const branch = composeBranchName(name, policy);
   const issues = [
     ...(policy.requirePrefix && !policy.prefix
       ? [validationIssue("INVALID_BRANCH_NAME", "Branch naming policy requires a prefix", { policy })]
@@ -251,7 +251,6 @@ export function validatePrepareWorkspace(options: PrepareWorkspaceOptions): Prep
     name,
     branch,
     directoryName,
-    pathName: directoryName,
     path,
   };
 }
