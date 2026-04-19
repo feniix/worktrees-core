@@ -35,10 +35,11 @@
     "check:ci": "biome ci . && tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "node ./scripts/e2e-pack.mjs",
     "smoke:pack": "node ./scripts/smoke-pack.mjs",
     "lint:pkg": "publint",
     "lint:types:advisory": "attw --pack .",
-    "release:check": "npm run check && npm run test && npm run build && npm run smoke:pack && npm pack --dry-run && npm run lint:pkg",
+    "release:check": "npm run check && npm run test && npm run build && npm run smoke:pack && npm run test:e2e && npm pack --dry-run && npm run lint:pkg",
     "prepublishOnly": "npm run release:check"
   },
   "keywords": [
