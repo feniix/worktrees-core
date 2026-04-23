@@ -1,0 +1,110 @@
+name: Release
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.detect.outputs.should_publish }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect package.json version bump
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE=""
+          HEAD="${{ github.sha }}"
+
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            BASE="${{ github.event.before }}"
+          fi
+
+          if [[ -z "$BASE" || "$BASE" == "0000000000000000000000000000000000000000" ]]; then
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          OLD_VERSION="$(git show "$BASE:package.json" 2>/dev/null | jq -r '.version // empty' || echo "")"
+          NEW_VERSION="$(jq -r '.version // empty' package.json)"
+
+          if [[ -z "$OLD_VERSION" || -z "$NEW_VERSION" ]]; then
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$OLD_VERSION" != "$NEW_VERSION" ]]; then
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  checks:
+    needs: detect
+    if: needs.detect.outputs.should_publish == 'true'
+    outputs:
+      should_publish: ${{ needs.detect.outputs.should_publish }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+  publish:
+    needs: checks
+    if: needs.checks.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    environment: npm-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish
+        run: |
+          npm publish --access public --provenance
