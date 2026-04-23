@@ -123,7 +123,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Explain skip
-        run: echo "::notice::Checks skipped: ${{ needs.detect.outputs.reason }}"
+        run: |
+          echo "::notice::Checks skipped: ${{ needs.detect.outputs.reason }}"
 
   publish:
     needs: checks
@@ -153,5 +154,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Explain skip
-        run: echo "::notice::Publish skipped because dry_run=true"
+        run: |
+          echo "::notice::Publish skipped because dry_run=true"
 
