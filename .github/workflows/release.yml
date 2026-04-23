@@ -24,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_publish: ${{ steps.detect.outputs.should_publish }}
+      reason: ${{ steps.detect.outputs.reason }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -38,6 +39,7 @@ jobs:
 
           BASE=""
           HEAD="${{ github.sha }}"
+          REASON=""
 
           if [[ "${{ github.event_name }}" == "push" ]]; then
             BASE="${{ github.event.before }}"
@@ -46,7 +48,9 @@ jobs:
           fi
 
           if [[ -z "$BASE" || "$BASE" == "0000000000000000000000000000000000000000" ]]; then
+            REASON="No base commit available for version comparison (initial run or missing history)."
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "reason=$REASON" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -54,14 +58,20 @@ jobs:
           NEW_VERSION="$(jq -r '.version // empty' package.json)"
 
           if [[ -z "$OLD_VERSION" || -z "$NEW_VERSION" ]]; then
+            REASON="Missing package version in HEAD or previous commit; cannot determine publish status."
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "reason=$REASON" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           if [[ "$OLD_VERSION" != "$NEW_VERSION" ]]; then
+            REASON="Version bump detected: $OLD_VERSION -> $NEW_VERSION"
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            echo "reason=$REASON" >> "$GITHUB_OUTPUT"
           else
+            REASON="No version change in package.json: $OLD_VERSION"
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "reason=$REASON" >> "$GITHUB_OUTPUT"
           fi
 
   checks:
@@ -107,6 +117,14 @@ jobs:
       - name: Build
         run: npm run build
 
+  checks_skipped:
+    needs: detect
+    if: needs.detect.outputs.should_publish != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain skip
+        run: echo "::notice::Checks skipped: ${{ needs.detect.outputs.reason }}"
+
   publish:
     needs: checks
     if: needs.checks.outputs.should_publish == 'true' && (github.event.inputs.dry_run != 'true')
@@ -128,3 +146,12 @@ jobs:
       - name: Publish
         run: |
           npm publish --access public --provenance
+
+  publish_skipped:
+    needs: checks
+    if: needs.checks.outputs.should_publish == 'true' && (github.event.inputs.dry_run == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain skip
+        run: echo "::notice::Publish skipped because dry_run=true"
+
