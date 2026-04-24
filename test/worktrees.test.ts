@@ -178,7 +178,7 @@ describe("worktree primitives", () => {
   });
 
   it("emits a non-throwing compatibility warning when force skips validation", () => {
-    const emitWarning = vi.spyOn(process, "emitWarning").mockImplementation(() => true);
+    const emitWarning = vi.spyOn(process, "emitWarning").mockImplementation(() => undefined);
 
     try {
       emitForceSkipsValidationWarning("createWorktree");
