@@ -41,6 +41,8 @@ npm run lint:pkg
 
 `npm publish` also runs `prepublishOnly`, which currently executes `npm run release:check`.
 
+The GitHub Release workflow is version-bump driven: when `package.json` changes on `main`, CI publishes the npm package, then creates the matching `vX.Y.Z` Git tag and GitHub Release with generated notes. GitHub Releases are post-publish artifacts, not the trigger for publishing.
+
 ## Packaging notes
 
 - The package is published from compiled output in `dist/`.
