@@ -1,3 +1,4 @@
+import { emitForceSkipsValidationWarning } from "./deprecations.js";
 import { composeBranchName, resolveWorkspaceDirectoryName } from "./naming.js";
 import type { PlannedWorkspace, PreparedWorkspace, PrepareWorkspaceOptions } from "./types.js";
 import { assertPrepareWorkspaceAllowed } from "./validation.js";
@@ -30,11 +31,13 @@ export function planPrepareWorkspace(options: PrepareWorkspaceOptions): PlannedW
 }
 
 export function prepareWorkspace(options: PrepareWorkspaceOptions): PreparedWorkspace {
-  const { cwd = process.cwd(), gitBin, from, createBranch = true, force = false } = options;
+  const { cwd = process.cwd(), gitBin, from, createBranch = true, force = false, validateOnForce = false } = options;
   const planned = planPrepareWorkspace(options);
 
-  if (!force) {
+  if (!force || validateOnForce) {
     assertPrepareWorkspaceAllowed(options);
+  } else {
+    emitForceSkipsValidationWarning("prepareWorkspace");
   }
 
   createWorktree({
@@ -45,6 +48,7 @@ export function prepareWorkspace(options: PrepareWorkspaceOptions): PreparedWork
     from,
     createBranch,
     force,
+    validateOnForce,
   });
 
   return planned;

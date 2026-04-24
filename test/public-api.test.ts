@@ -4,6 +4,7 @@ import * as api from "../src/index.js";
 describe("public root API", () => {
   it("exports the exact intended runtime surface", () => {
     expect(Object.keys(api).sort()).toEqual([
+      "GitCommandError",
       "WorktreesCoreError",
       "assertBranchNamingPolicy",
       "assertBranchReferenceExists",
