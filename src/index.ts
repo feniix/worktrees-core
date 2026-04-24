@@ -1,4 +1,11 @@
-export { type ValidationIssue, type ValidationResult, WorktreesCoreError } from "./errors.js";
+export {
+  GitCommandError,
+  type GitCommandErrorDetails,
+  type ValidationIssue,
+  type ValidationResult,
+  WorktreesCoreError,
+  type WorktreesCoreErrorCode,
+} from "./errors.js";
 export {
   branchExists,
   findRepoRoot,

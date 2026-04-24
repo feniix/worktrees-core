@@ -20,9 +20,8 @@ import {
   findCurrentWorktree,
   findWorktreeByPath,
   getMainWorktree,
-  resolveWorktreePath,
   worktreePathExists,
-} from "./worktrees.js";
+} from "./worktree-query.js";
 
 function normalizeComparablePath(path: string, baseDir = process.cwd()): string {
   return resolve(baseDir, path);
@@ -235,9 +234,7 @@ export function validatePrepareWorkspace(options: PrepareWorkspaceOptions): Prep
         ]),
         pathName: options.directoryName ?? directoryName,
       };
-  const path = pathNameValidation.valid
-    ? resolveWorktreePath(pathNameValidation.pathName, worktreeRoot)
-    : resolve(worktreeRoot, directoryName);
+  const path = resolve(worktreeRoot, pathNameValidation.valid ? pathNameValidation.pathName : directoryName);
   const hasWorkspaceName = Boolean(name.trim());
   const issues = [
     ...(hasWorkspaceName

@@ -79,6 +79,7 @@ These are intentionally kept available at the root, but are lower-level than the
 - `refExists(ref, options)`
 - `isValidBranchName(branch, options)`
 - `WorktreesCoreError`
+- `GitCommandError`
 
 ## Shared types
 
@@ -91,14 +92,27 @@ These are intentionally kept available at the root, but are lower-level than the
 - `PlannedWorktree`
 - `BranchNamingOptions`
 - `BranchNamingPolicy`
+- `WorktreePathValidationResult`
+- `BranchValidationResult`
+- `BranchReferenceValidationResult`
+- `CreateWorktreeValidationResult`
+- `RemoveWorktreeValidationResult`
+- `PrepareWorkspaceValidationResult`
+- `BranchNamingPolicyValidationResult`
 - `ValidationIssue`
 - `ValidationResult`
+- `WorktreesCoreErrorCode`
+- `GitCommandErrorDetails`
 
 ## Error model
 
 - `WorktreesCoreError`
+- `GitCommandError`
+- `WorktreesCoreErrorCode`
 - `ValidationIssue`
 - `ValidationResult`
+
+Validation failures use `WorktreesCoreError` with a stable `code`. Unexpected Git subprocess failures use `GitCommandError`, a `WorktreesCoreError` subclass with code `GIT_COMMAND_FAILED` and structured command details. Validation helpers are preflight checks; Git remains the final authority at execution time.
 
 ## Workspace path semantics
 
@@ -138,3 +152,7 @@ You can also inspect the typed validation helpers first and decide how to surfac
 - attaching to a missing existing branch when `createBranch: false`
 - removing the main worktree
 - removing the current worktree without `force`
+
+For 1.x compatibility, `force: true` preserves the historical behavior of forwarding Git `--force` and skipping preflight validation. That compatibility behavior is deprecated: force-skipped validation emits a process warning with code `WORKTREES_CORE_FORCE_SKIPS_VALIDATION` and is planned to change in 2.0.
+
+Pass `validateOnForce: true` to opt into the 2.0 safety behavior now. With `validateOnForce`, `force` still forwards Git `--force`, but validation remains enabled so unsafe create inputs and main-worktree removal are rejected before Git is invoked.

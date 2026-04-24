@@ -1,4 +1,5 @@
 export type WorktreesCoreErrorCode =
+  | "GIT_COMMAND_FAILED"
   | "INVALID_WORKTREE_PATH_NAME"
   | "INVALID_WORKSPACE_NAME"
   | "INVALID_BRANCH_NAME"
@@ -19,6 +20,28 @@ export class WorktreesCoreError extends Error {
     this.name = "WorktreesCoreError";
     this.code = code;
     this.details = details;
+  }
+}
+
+export interface GitCommandErrorDetails extends Record<string, unknown> {
+  gitBin: string;
+  args: string[];
+  cwd?: string;
+  status?: number;
+  signal?: string;
+  stdout?: string;
+  stderr?: string;
+}
+
+export class GitCommandError extends WorktreesCoreError {
+  readonly details: GitCommandErrorDetails;
+  readonly cause?: unknown;
+
+  constructor(details: GitCommandErrorDetails, cause?: unknown) {
+    super("GIT_COMMAND_FAILED", "Git command failed", details);
+    this.name = "GitCommandError";
+    this.details = details;
+    this.cause = cause;
   }
 }
 

@@ -4,6 +4,7 @@
 - This repository is a standalone TypeScript library.
 - Source files live in `src/`.
 - Tests live in `test/` and use `*.test.ts` naming.
+- Documented solutions live in `docs/solutions/`, organized by category with YAML frontmatter fields such as `module`, `tags`, and `problem_type`; relevant when implementing or debugging in documented areas.
 - Root config files include `package.json`, `tsconfig.json`, and `vitest.config.ts`.
 
 ## Build, Test, and Development Commands

@@ -17,11 +17,13 @@ export interface CreateWorktreeOptions extends GitOptions {
   from?: string;
   createBranch?: boolean;
   force?: boolean;
+  validateOnForce?: boolean;
 }
 
 export interface RemoveWorktreeOptions extends GitOptions {
   path: string;
   force?: boolean;
+  validateOnForce?: boolean;
 }
 
 export interface BranchNamingOptions {
@@ -40,6 +42,7 @@ export interface PrepareWorkspaceOptions extends GitOptions {
   directoryName?: string;
   createBranch?: boolean;
   force?: boolean;
+  validateOnForce?: boolean;
 }
 
 export interface PlannedWorktree {

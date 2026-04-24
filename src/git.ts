@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
+import { GitCommandError } from "./errors.js";
 
 export interface GitOptions {
   cwd?: string;
@@ -8,6 +9,35 @@ export interface GitOptions {
 
 export interface ExecGitOptions extends GitOptions {
   trim?: boolean;
+}
+
+function gitFailureDetails(
+  gitBin: string,
+  args: string[],
+  cwd: string | undefined,
+  error: unknown,
+): {
+  gitBin: string;
+  args: string[];
+  cwd?: string;
+  status?: number;
+  signal?: string;
+  stdout?: string;
+  stderr?: string;
+} {
+  const childError = error && typeof error === "object" ? (error as Record<string, unknown>) : {};
+  const stdout = childError.stdout;
+  const stderr = childError.stderr;
+
+  return {
+    gitBin,
+    args,
+    ...(cwd ? { cwd } : {}),
+    ...(typeof childError.status === "number" ? { status: childError.status } : {}),
+    ...(typeof childError.signal === "string" ? { signal: childError.signal } : {}),
+    ...(stdout instanceof Buffer || typeof stdout === "string" ? { stdout: stdout.toString() } : {}),
+    ...(stderr instanceof Buffer || typeof stderr === "string" ? { stderr: stderr.toString() } : {}),
+  };
 }
 
 export function execGit(args: string[], options: ExecGitOptions = {}): string {
@@ -21,8 +51,7 @@ export function execGit(args: string[], options: ExecGitOptions = {}): string {
     });
     return trim ? output.trim() : output;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Git command failed (${gitBin} ${args.join(" ")}): ${message}`);
+    throw new GitCommandError(gitFailureDetails(gitBin, args, cwd, error), error);
   }
 }
 
@@ -55,7 +84,7 @@ export function branchExists(branch: string, options: GitOptions = {}): boolean 
 
 export function refExists(ref: string, options: GitOptions = {}): boolean {
   try {
-    execGit(["rev-parse", "--verify", "--quiet", ref], options);
+    execGit(["rev-parse", "--verify", "--quiet", "--end-of-options", ref], options);
     return true;
   } catch {
     return false;

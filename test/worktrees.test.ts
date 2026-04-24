@@ -1,6 +1,7 @@
 import { mkdirSync, rmSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { emitForceSkipsValidationWarning } from "../src/deprecations.js";
 import {
   assertCreateWorktreeAllowed,
   assertRemoveWorktreeAllowed,
@@ -158,6 +159,78 @@ describe("worktree primitives", () => {
 
     removeWorktree({ cwd: repoDir, path });
     expect(findWorktreeByPath(path, repoDir)).toBeUndefined();
+  });
+
+  it("passes user-controlled worktree paths after git option parsing", () => {
+    const repoDir = getRepoDir();
+    const path = "--dash-prefixed-worktree";
+
+    const created = createWorktree({
+      cwd: repoDir,
+      path,
+      branch: "feature/dash-prefixed-path",
+      from: "main",
+    });
+    expect(canonicalPath(created.path)).toBe(canonicalPath(resolve(repoDir, path)));
+
+    removeWorktree({ cwd: repoDir, path });
+    expect(findWorktreeByPath(path, repoDir)).toBeUndefined();
+  });
+
+  it("emits a non-throwing compatibility warning when force skips validation", () => {
+    const emitWarning = vi.spyOn(process, "emitWarning").mockImplementation(() => undefined);
+
+    try {
+      emitForceSkipsValidationWarning("createWorktree");
+      expect(emitWarning).toHaveBeenCalledWith(expect.stringContaining("validateOnForce: true"), {
+        type: "Warning",
+        code: "WORKTREES_CORE_FORCE_SKIPS_VALIDATION",
+      });
+    } finally {
+      emitWarning.mockRestore();
+    }
+  });
+
+  it("supports opt-in force validation for 2.0 safety semantics", () => {
+    const repoDir = getRepoDir();
+    const duplicateCheckoutPath = join(defaultWorktreeRoot(repoDir), "main-duplicate");
+
+    const duplicate = createWorktree({
+      cwd: repoDir,
+      path: duplicateCheckoutPath,
+      branch: "main",
+      createBranch: false,
+      force: true,
+      validateOnForce: true,
+    });
+    expect(duplicate.path).toBe(duplicateCheckoutPath);
+    expect(duplicate.branch).toBe("main");
+
+    try {
+      createWorktree({
+        cwd: repoDir,
+        path: duplicateCheckoutPath,
+        branch: "feature/force-still-validates",
+        from: "main",
+        force: true,
+        validateOnForce: true,
+      });
+      throw new Error("expected forced create with validation enabled to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(WorktreesCoreError);
+      expect((error as WorktreesCoreError).code).toBe("WORKTREE_PATH_EXISTS");
+    }
+
+    try {
+      removeWorktree({ cwd: repoDir, path: repoDir, force: true, validateOnForce: true });
+      throw new Error("expected force remove of main worktree with validation enabled to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(WorktreesCoreError);
+      expect((error as WorktreesCoreError).code).toBe("MAIN_WORKTREE_REMOVE_FORBIDDEN");
+    }
+
+    removeWorktree({ cwd: repoDir, path: duplicateCheckoutPath, force: true, validateOnForce: true });
+    expect(findWorktreeByPath(duplicateCheckoutPath, repoDir)).toBeUndefined();
   });
 
   it("rejects unsafe create and remove operations with typed errors", () => {

@@ -7,6 +7,7 @@ import {
   planPrepareWorkspace,
   prepareWorkspace,
   validatePrepareWorkspace,
+  WorktreesCoreError,
 } from "../src/index.js";
 import { useTempGitRepo } from "./helpers.js";
 
@@ -93,5 +94,33 @@ describe("workspace workflows", () => {
       worktreeRoot: customRoot,
     });
     expect(prepared.path).toBe(join(customRoot, "docs-refresh"));
+  });
+
+  it("supports opt-in force validation for 2.0 workspace safety semantics", () => {
+    const repoDir = getRepoDir();
+
+    const prepared = prepareWorkspace({
+      cwd: repoDir,
+      name: "force-validation",
+      branchPrefix: "feature",
+      from: "main",
+    });
+
+    try {
+      prepareWorkspace({
+        cwd: repoDir,
+        name: "force-validation",
+        branchPrefix: "feature",
+        from: "main",
+        force: true,
+        validateOnForce: true,
+      });
+      throw new Error("expected forced prepareWorkspace with validation enabled to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(WorktreesCoreError);
+      expect((error as WorktreesCoreError).code).toBe("WORKTREE_PATH_EXISTS");
+    }
+
+    expect(listWorktrees(repoDir).some((entry) => entry.path === prepared.path)).toBe(true);
   });
 });
