@@ -1,6 +1,7 @@
 import { mkdirSync, rmSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { emitForceSkipsValidationWarning } from "../src/deprecations.js";
 import {
   assertCreateWorktreeAllowed,
   assertRemoveWorktreeAllowed,
@@ -22,7 +23,6 @@ import {
   WorktreesCoreError,
   worktreePathExists,
 } from "../src/index.js";
-import { emitForceSkipsValidationWarning } from "../src/deprecations.js";
 import { canonicalPath, useTempGitRepo } from "./helpers.js";
 
 describe("worktree primitives", () => {
