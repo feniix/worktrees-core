@@ -7,7 +7,7 @@ TypeScript-first library for git worktree primitives, validation, and higher-lev
 - Git worktree primitives for listing, creating, removing, and pruning worktrees
 - Higher-level workspace workflows built on top of reusable primitives
 - Planning and validation helpers so callers can inspect operations before mutating state
-- Typed domain errors for unsafe operations
+- Typed domain errors for unsafe operations and Git subprocess failures
 - Reusable branch naming helpers and policies
 
 ## Install
@@ -105,6 +105,8 @@ if (!validation.valid) {
 - **Workspace workflows** compose naming, validation, and worktree creation into higher-level flows.
 - **Validation helpers** let callers inspect issues before attempting mutations.
 - **Planning helpers** make it easy to preview derived branch names and paths.
+- **Error types** expose stable `WorktreesCoreError` codes for validation failures and `GitCommandError` details for unexpected Git subprocess failures.
+- **Force compatibility** keeps `force: true` validation-skipping behavior for 1.x, emits a process warning, and offers `validateOnForce: true` to opt into the stricter 2.0 safety behavior now.
 - The release gate includes installed-package integration E2E checks against a packed tarball, not just repo-internal tests.
 
 ## Documentation

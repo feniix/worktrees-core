@@ -1,6 +1,6 @@
 import { mkdirSync, rmSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   assertCreateWorktreeAllowed,
   assertRemoveWorktreeAllowed,
@@ -22,6 +22,7 @@ import {
   WorktreesCoreError,
   worktreePathExists,
 } from "../src/index.js";
+import { emitForceSkipsValidationWarning } from "../src/deprecations.js";
 import { canonicalPath, useTempGitRepo } from "./helpers.js";
 
 describe("worktree primitives", () => {
@@ -174,6 +175,20 @@ describe("worktree primitives", () => {
 
     removeWorktree({ cwd: repoDir, path });
     expect(findWorktreeByPath(path, repoDir)).toBeUndefined();
+  });
+
+  it("emits a non-throwing compatibility warning when force skips validation", () => {
+    const emitWarning = vi.spyOn(process, "emitWarning").mockImplementation(() => true);
+
+    try {
+      emitForceSkipsValidationWarning("createWorktree");
+      expect(emitWarning).toHaveBeenCalledWith(expect.stringContaining("validateOnForce: true"), {
+        type: "Warning",
+        code: "WORKTREES_CORE_FORCE_SKIPS_VALIDATION",
+      });
+    } finally {
+      emitWarning.mockRestore();
+    }
   });
 
   it("supports opt-in force validation for 2.0 safety semantics", () => {

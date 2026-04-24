@@ -25,21 +25,18 @@ function gitFailureDetails(
   stdout?: string;
   stderr?: string;
 } {
-  const childError = error as {
-    status?: number;
-    signal?: string;
-    stdout?: Buffer | string;
-    stderr?: Buffer | string;
-  };
+  const childError = error && typeof error === "object" ? (error as Record<string, unknown>) : {};
+  const stdout = childError.stdout;
+  const stderr = childError.stderr;
 
   return {
     gitBin,
     args,
     ...(cwd ? { cwd } : {}),
     ...(typeof childError.status === "number" ? { status: childError.status } : {}),
-    ...(childError.signal ? { signal: childError.signal } : {}),
-    ...(childError.stdout ? { stdout: childError.stdout.toString() } : {}),
-    ...(childError.stderr ? { stderr: childError.stderr.toString() } : {}),
+    ...(typeof childError.signal === "string" ? { signal: childError.signal } : {}),
+    ...(stdout instanceof Buffer || typeof stdout === "string" ? { stdout: stdout.toString() } : {}),
+    ...(stderr instanceof Buffer || typeof stderr === "string" ? { stderr: stderr.toString() } : {}),
   };
 }
 

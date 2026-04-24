@@ -153,6 +153,6 @@ You can also inspect the typed validation helpers first and decide how to surfac
 - removing the main worktree
 - removing the current worktree without `force`
 
-For 1.x compatibility, `force: true` preserves the historical behavior of forwarding Git `--force` and skipping preflight validation. That compatibility behavior is deprecated: force-skipped validation emits a deprecation warning and is planned to change in 2.0.
+For 1.x compatibility, `force: true` preserves the historical behavior of forwarding Git `--force` and skipping preflight validation. That compatibility behavior is deprecated: force-skipped validation emits a process warning with code `WORKTREES_CORE_FORCE_SKIPS_VALIDATION` and is planned to change in 2.0.
 
 Pass `validateOnForce: true` to opt into the 2.0 safety behavior now. With `validateOnForce`, `force` still forwards Git `--force`, but validation remains enabled so unsafe create inputs and main-worktree removal are rejected before Git is invoked.

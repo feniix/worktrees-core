@@ -10,7 +10,7 @@ export function emitForceSkipsValidationWarning(apiName: string): void {
       "This compatibility behavior is deprecated and will change in 2.0. " +
       "Pass validateOnForce: true to opt into the 2.0 safety behavior now.",
     {
-      type: "DeprecationWarning",
+      type: "Warning",
       code,
     },
   );
