@@ -64,7 +64,7 @@
   "bugs": {
     "url": "https://github.com/feniix/worktrees-core/issues"
   },
-  "homepage": "https://github.com/feniix/worktrees-core#readme",
+  "homepage": "https://feniix-hq.net/projects/worktrees-core/",
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
     "@biomejs/biome": "^2.3.5",
