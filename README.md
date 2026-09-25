@@ -2,6 +2,8 @@
 
 TypeScript-first library for git worktree primitives, validation, and higher-level workspace workflows.
 
+More about why this exists and where it is useful: [feniix-hq.net/projects/worktrees-core](https://feniix-hq.net/projects/worktrees-core/).
+
 ## Features
 
 - Git worktree primitives for listing, creating, removing, and pruning worktrees
